@@ -20,6 +20,8 @@ const pageTitle = {
   contact: 'Contact - dextracommunication.com',
 }
 
+const contactFormEndpoint = 'https://formspree.io/f/mwvdzlvq'
+
 function normalizePath(pathname) {
   if (pathname === '/' || pathname === '') return '/'
   return pathname.replace(/\/index\.html$/, '').replace(/\/$/, '')
@@ -116,6 +118,77 @@ function injectStyles(styleHtml) {
   })
 }
 
+function wireContactForm(container) {
+  const form = container.querySelector('#wpforms-form-1586')
+  if (!form) return
+
+  form.setAttribute('action', contactFormEndpoint)
+  form.setAttribute('method', 'POST')
+  if (form.dataset.replicaFormWired === 'true') return
+  form.dataset.replicaFormWired = 'true'
+
+  const submitButton = form.querySelector('[type="submit"]')
+  const spinner = form.querySelector('.wpforms-submit-spinner')
+  const status = document.createElement('p')
+  status.className = 'replica-form-status'
+  status.setAttribute('aria-live', 'polite')
+  form.querySelector('.wpforms-submit-container')?.appendChild(status)
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+
+    if (!form.reportValidity()) return
+
+    const spamTrap = form.querySelector('#wpforms-1586-field_4')
+    if (spamTrap?.value) {
+      form.reset()
+      status.className = 'replica-form-status replica-form-status-success'
+      status.textContent = 'Merci, votre message a bien ete envoye.'
+      return
+    }
+
+    const firstName = form.querySelector('#wpforms-1586-field_1')?.value.trim() || ''
+    const lastName = form.querySelector('#wpforms-1586-field_1-last')?.value.trim() || ''
+    const email = form.querySelector('#wpforms-1586-field_2')?.value.trim() || ''
+    const message = form.querySelector('#wpforms-1586-field_3')?.value.trim() || ''
+    const fullName = [firstName, lastName].filter(Boolean).join(' ')
+    const payload = new FormData()
+
+    payload.append('name', fullName)
+    payload.append('first_name', firstName)
+    payload.append('last_name', lastName)
+    payload.append('email', email)
+    payload.append('message', message)
+    payload.append('_replyto', email)
+    payload.append('_subject', 'New Dextra contact form message')
+
+    submitButton?.setAttribute('disabled', 'disabled')
+    spinner?.style.setProperty('display', 'inline-block')
+    status.className = 'replica-form-status'
+    status.textContent = 'Envoi en cours...'
+
+    try {
+      const response = await fetch(contactFormEndpoint, {
+        method: 'POST',
+        body: payload,
+        headers: { Accept: 'application/json' },
+      })
+
+      if (!response.ok) throw new Error('Formspree rejected the submission')
+
+      form.reset()
+      status.className = 'replica-form-status replica-form-status-success'
+      status.textContent = 'Merci, votre message a bien ete envoye.'
+    } catch {
+      status.className = 'replica-form-status replica-form-status-error'
+      status.textContent = 'Le message n\'a pas pu etre envoye. Veuillez reessayer.'
+    } finally {
+      submitButton?.removeAttribute('disabled')
+      spinner?.style.setProperty('display', 'none')
+    }
+  })
+}
+
 function wireRuntimeBehaviors(container) {
   container.querySelectorAll('a[href^="/"]').forEach((link) => {
     const href = link.getAttribute('href')
@@ -190,7 +263,9 @@ function wireRuntimeBehaviors(container) {
     counters.forEach(animateCounter)
   }
 
-  container.querySelectorAll('form').forEach((form) => {
+  wireContactForm(container)
+
+  container.querySelectorAll('form:not(#wpforms-form-1586)').forEach((form) => {
     form.addEventListener('submit', (event) => event.preventDefault())
   })
 
