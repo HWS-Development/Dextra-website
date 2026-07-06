@@ -1,0 +1,36 @@
+.replica-loading,
+.replica-error {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: Montserrat, sans-serif;
+}
+
+.replica-page {
+  min-height: 100vh;
+}
+
+.replica-page .ast-mobile-header-content {
+  display: none;
+}
+
+.replica-page .ast-mobile-header-content.replica-menu-open {
+  display: block;
+}
+
+.replica-page a[href^="/about/index.html"],
+.replica-page a[href^="/services/index.html"],
+.replica-page a[href^="/portfolio/index.html"],
+.replica-page a[href^="/contact/index.html"] {
+  cursor: pointer;
+}
+
+.replica-page iframe {
+  max-width: 100%;
+}
+
+.replica-page form button,
+.replica-page form input,
+.replica-page form textarea {
+  font-family: inherit;
+}
