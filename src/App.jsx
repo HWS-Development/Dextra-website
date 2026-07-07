@@ -71,6 +71,8 @@ function cleanDocument(html, page) {
 
   doc.querySelectorAll('[onclick]').forEach((node) => node.removeAttribute('onclick'))
 
+  doc.querySelector('#wpforms-1586-field_4-container')?.remove()
+
   doc.querySelectorAll('[href]').forEach((node) => {
     const href = node.getAttribute('href')
     const normalized = normalizeUrl(href, page)
